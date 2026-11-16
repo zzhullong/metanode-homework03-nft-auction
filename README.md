@@ -2,6 +2,8 @@
 
 MetaNodeAcademy LearningRoadmap `contract/homework03` 的实现：ERC721 NFT + 支持 ETH / ERC20 出价、通过 Chainlink 价格预言机折算 USD 比较的拍卖市场，拍卖合约采用 UUPS 可升级代理。
 
+仓库：https://github.com/zzhullong/metanode-homework03-nft-auction
+
 > 作业原文要求 Hardhat；本项目按确认改用纯 Foundry，功能与交付物一一对应。
 
 设计文档：`docs/superpowers/specs/2026-11-16-nft-auction-design.md`
