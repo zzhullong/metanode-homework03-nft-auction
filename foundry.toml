@@ -1,0 +1,29 @@
+[profile.default]
+src = "src"
+test = "test"
+script = "script"
+out = "out"
+libs = ["lib"]
+solc = "0.8.38"
+auto_detect_solc = false
+optimizer = true
+optimizer_runs = 200
+evm_version = "cancun"
+via_ir = false
+ffi = false
+fs_permissions = [{ access = "read-write", path = "./deployments" }]
+
+[fmt]
+line_length = 120
+tab_width = 4
+bracket_spacing = true
+
+[fuzz]
+runs = 256
+
+[profile.ci.fuzz]
+runs = 1024
+
+# 本机没有从 binaries.soliditylang.org 下载 solc 时使用：FOUNDRY_PROFILE=local
+[profile.local]
+solc = "/Users/zulg/.local/bin/solc"
