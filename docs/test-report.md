@@ -87,6 +87,6 @@ Ran 6 test suites: 65 tests passed, 0 failed, 1 skipped (66 total tests)
 | MockUSDC | `0x5a691F296c80c1544a0519D9EA67F0bD8E069E68` |
 | fork 测试 | `test_Fork_LiveEthUsdFeed` **PASS**（读取官方 ETH/USD feed `0x694AA176…5306` 折算 USD） |
 | 升级后校验 | `getVersion() = "NFTAuction V2"`；费率 200/150/100 bps；分界点 $1,000 / $10,000 |
-| 源码验证 | 未做（未配置 Etherscan API Key） |
+| 源码验证 | 6 个自部署合约（代理、V1/V2 实现、MetaNFT、MockUSDC、MockV3Aggregator）均已在 Etherscan 验证通过 |
 
 > 部署时 Sepolia base fee 约 16 wei：9 笔部署交易 + 1 笔升级交易总计花费不足 0.001 ETH。

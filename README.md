@@ -28,7 +28,7 @@ MetaNodeAcademy LearningRoadmap `contract/homework03` 的实现：ERC721 NFT + �
 - 全部合约功能已实现：上架托管、ETH/ERC20 双币种出价、Chainlink USD 折算与陈旧校验、拉取式退款/货款/平台费、UUPS 升级、V2 分档动态手续费。
 - 测试：`forge test` 共 66 个用例，**全部通过**（配置 `SEPOLIA_RPC_URL` 后 fork 用例不再跳过，已对 Sepolia 真实 ETH/USD feed 跑通）。
 - 覆盖率：`src/` 行覆盖 99.6%（`NFTAuction` 99.3%、`NFTAuctionV2` 100%、`MetaNFT` 与 mocks 100%）；详见 `docs/test-report.md`。
-- **已部署到 Sepolia 并升级至 V2**，地址见下方「Sepolia 部署」；源码尚未在 Etherscan 验证（未配置 API Key）。
+- **已部署到 Sepolia、升级至 V2，并在 Etherscan 完成源码验证**，地址与验证链接见下方「Sepolia 部署」。
 
 实现要点（详见源码注释）：
 - 上架是无需许可的：NFT 持有者授权后自行调用 `createAuction`，NFT 托管进拍卖合约。
@@ -112,15 +112,17 @@ forge script script/Upgrade.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verif
 
 ### 已部署地址（Sepolia，chainId 11155111）
 
-| 合约 | 地址 |
-| --- | --- |
-| **NFTAuction 代理（交互用这个）** | `0xB8322C97fDd3B005557DBe8384951E6456136E7b` |
-| V1 实现 | `0xd2B3f7Db8eCC8985CA1fec0f29b5653e277334AC` |
-| V2 实现（当前生效） | `0xe167d464Ca57941d41CAe259A87bDC967d935819` |
-| MetaNFT | `0x1D2eb05E2AE0d15B2409FeE79b24d180c6EF0713` |
-| MockUSDC（6 位小数） | `0x5a691F296c80c1544a0519D9EA67F0bD8E069E68` |
-| ETH/USD feed（官方 Chainlink） | `0x694AA1769357215DE4FAC081bf1f309aDC325306` |
-| USDC/USD feed（自部署 mock） | `0x0Ff19B399EB444c70d483549438b6ff309609AD8` |
+| 合约 | 地址 | Etherscan |
+| --- | --- | --- |
+| **NFTAuction 代理（交互用这个）** | `0xB8322C97fDd3B005557DBe8384951E6456136E7b` | [查看](https://sepolia.etherscan.io/address/0xB8322C97fDd3B005557DBe8384951E6456136E7b#code) |
+| V1 实现 | `0xd2B3f7Db8eCC8985CA1fec0f29b5653e277334AC` | [查看](https://sepolia.etherscan.io/address/0xd2B3f7Db8eCC8985CA1fec0f29b5653e277334AC#code) |
+| V2 实现（当前生效） | `0xe167d464Ca57941d41CAe259A87bDC967d935819` | [查看](https://sepolia.etherscan.io/address/0xe167d464Ca57941d41CAe259A87bDC967d935819#code) |
+| MetaNFT | `0x1D2eb05E2AE0d15B2409FeE79b24d180c6EF0713` | [查看](https://sepolia.etherscan.io/address/0x1D2eb05E2AE0d15B2409FeE79b24d180c6EF0713#code) |
+| MockUSDC（6 位小数） | `0x5a691F296c80c1544a0519D9EA67F0bD8E069E68` | [查看](https://sepolia.etherscan.io/address/0x5a691F296c80c1544a0519D9EA67F0bD8E069E68#code) |
+| ETH/USD feed（官方 Chainlink） | `0x694AA1769357215DE4FAC081bf1f309aDC325306` | [查看](https://sepolia.etherscan.io/address/0x694AA1769357215DE4FAC081bf1f309aDC325306) |
+| USDC/USD feed（自部署 mock） | `0x0Ff19B399EB444c70d483549438b6ff309609AD8` | [查看](https://sepolia.etherscan.io/address/0x0Ff19B399EB444c70d483549438b6ff309609AD8#code) |
+
+以上 6 个自部署合约均已在 Etherscan 完成源码验证。
 
 部署者 / owner / feeRecipient：`0x669A0F2529889989971d746acEC08339A02006de`（演示用钱包，仅持有测试币）
 
