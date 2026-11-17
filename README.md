@@ -53,6 +53,10 @@ test/
 ## 快速开始
 
 ```bash
+git clone --recursive git@github.com:zzhullong/metanode-homework03-nft-auction.git
+# 已 clone 过的仓库请同步子模块（OZ 已由 v5.4.0 升级到 v5.7.0，不同步会找不到 import）
+git submodule update --init --recursive
+
 forge build                  # 编译全部合约
 forge test                   # 65 通过 / 1 跳过（fork 用例需 SEPOLIA_RPC_URL）
 forge coverage --report summary
