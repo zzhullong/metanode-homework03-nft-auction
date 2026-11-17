@@ -39,7 +39,7 @@ script/
 └── Upgrade.s.sol               V1 → V2 升级并初始化费率
 test/
 ├── MetaNFT.t.sol               NFT 单元测试（已实现）
-├── NFTAuction.t.sol            拍卖单元测试（骨架）
+├── NFTAuction.t.sol            拍卖单元测试（38 个用例）
 ├── NFTAuctionIntegration.t.sol 跨币种全流程 + 升级 + fuzz
 └── NFTAuctionFork.t.sol        Sepolia fork（无 RPC 自动跳过）
 ```
@@ -59,7 +59,7 @@ forge coverage --report summary
 forge fmt
 ```
 
-依赖版本：forge-std v1.17.0、OpenZeppelin v5.4.0（v5.5+ 移除了 `ReentrancyGuardUpgradeable`，不要升级）、Solidity 0.8.38（源码 `pragma` 为 `^0.8.28`，0.8.28+ 均可编译）。
+依赖版本：forge-std v1.17.0、OpenZeppelin v5.7.0、Solidity 0.8.38（源码 `pragma` 固定为 `0.8.38`）。OZ v5.5+ 不再提供 `ReentrancyGuardUpgradeable`，本项目改用核心包的 `@openzeppelin/contracts/utils/ReentrancyGuard.sol`（同为 ERC-7201 命名空间存储，无需初始化调用）。
 
 若本机已有 solc、不想让 Foundry 联网下载编译器：在本地 `.env` 里写 `FOUNDRY_PROFILE=local`，并把 `foundry.toml` 中 `[profile.local].solc` 指向本机 solc 路径（本项目已指向 `~/.local/bin/solc`）。
 

@@ -29,7 +29,7 @@
 - 作业原文要求 Hardhat;用户明确选择纯 Foundry。README 中说明工具链差异与对应关系。
 - Sepolia 部署需要用户后补 RPC URL、私钥、Etherscan API Key;在此之前交付本地可验证的完整项目与部署脚本。
 - 参考 demo:`lc3091/hardhatV3Nft`(Hardhat + Foundry 测试)。仅参考业务流程,不照抄其实现缺陷(如退款代币错配、`transfer` 固定 gas、owner 代下单)。
-- Solidity 0.8.28+(实际编译用 0.8.38),OpenZeppelin Contracts v5.4.0,forge-std。
+- Solidity 0.8.38(源码 pragma 精确固定),OpenZeppelin Contracts v5.7.0,forge-std v1.17.0。
 
 ## 3. 核心流程
 
@@ -168,10 +168,10 @@ function getVersion() external pure returns (string memory); // "NFTAuction V1"
 - V2 的动态平台费用于满足"额外挑战";费率按结算时记录的最高出价 USD 值分档,费用按成交代币数量计算(结算不再读预言机)。
 - Sepolia 上的 ERC20 演示使用自部署 MockERC20 + MockV3Aggregator;ETH/USD 用真实 Chainlink feed。
 - Sepolia 交付包含 V1 部署 + 升级到 V2,两个实现合约均验证。
-- Solidity `^0.8.28`(本机用 0.8.38 编译) + OZ v5.4.0;代理部署与升级直接用 `ERC1967Proxy` / `UUPSUpgradeable`,不引入 openzeppelin-foundry-upgrades 插件(避免 FFI 与 Node 依赖)。
+- Solidity `0.8.38` + OZ v5.7.0(OZ v5.5+ 移除了 `ReentrancyGuardUpgradeable`,本项目改用核心包 `ReentrancyGuard`,同为 ERC-7201 命名空间存储槽,代理升级不错位);代理部署与升级直接用 `ERC1967Proxy` / `UUPSUpgradeable`,不引入 openzeppelin-foundry-upgrades 插件(避免 FFI 与 Node 依赖)。
 
 ## 10. 待补/待办
 
 - Sepolia 部署所需 RPC、私钥、Etherscan Key(用户后补)。
-- Chainlink Sepolia 官方 feed 地址在实现时核对并写入 README。
-- GitHub 空仓库创建(网页或 `gh auth login`)。
+- Chainlink Sepolia ETH/USD 官方 feed 已核对(`0x694AA1769357215DE4FAC081bf1f309aDC325306`)并写入 README 与部署脚本。
+- GitHub 仓库已创建:https://github.com/zzhullong/metanode-homework03-nft-auction 。

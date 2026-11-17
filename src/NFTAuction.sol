@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity 0.8.38;
 
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -18,7 +18,7 @@ import { AggregatorV3Interface } from "./interfaces/AggregatorV3Interface.sol";
 ///         所有出价通过 Chainlink 预言机折算成 USD(8 位小数)后比较高低。
 /// @dev 合约通过 UUPS 代理升级。下面的存储布局在部署后即冻结：V2 只能在末尾追加变量，
 ///      绝不能插入、删除或重排已有变量，否则代理后面的数据会整体错位。
-contract NFTAuction is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable {
+contract NFTAuction is Initializable, OwnableUpgradeable, ReentrancyGuard, UUPSUpgradeable {
     using SafeERC20 for IERC20;
 
     // ---------------------------------------------------------------------
@@ -63,7 +63,7 @@ contract NFTAuction is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrade
     // 存储（自本行起只允许在末尾追加）
     // ---------------------------------------------------------------------
     //
-    // OpenZeppelin v5 的可升级基础合约（Ownable / ReentrancyGuard）都使用 ERC-7201 命名空间存储，
+    // OpenZeppelin v5 的基础合约（OwnableUpgradeable / ReentrancyGuard）都使用 ERC-7201 命名空间存储，
     // 不占用普通的顺序 slot，因此从 nextAuctionId 开始就是本合约自己的布局。
     // 升级时请用 `forge inspect NFTAuction storageLayout` 对比 V1/V2。
 
@@ -147,7 +147,6 @@ contract NFTAuction is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrade
     function initialize(address owner_, address feeRecipient_) external initializer {
         if (owner_ == address(0) || feeRecipient_ == address(0)) revert ZeroAddress();
         __Ownable_init(owner_);
-        __ReentrancyGuard_init();
         feeRecipient = feeRecipient_;
         maxOracleStaleness = 1 hours;
     }
