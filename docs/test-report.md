@@ -16,7 +16,7 @@ forge coverage --report summary --report lcov
 | 测试用例 | 66 个（65 通过，0 失败，1 跳过） |
 | 跳过说明 | `NFTAuctionFork.t.sol` 需要 `SEPOLIA_RPC_URL`，未配置时自动 `vm.skip` |
 | `src/` 行覆盖率 | **99.56%**（227/228） |
-| `src/` 语句覆盖率 | 95.67%（243/254） |
+| `src/` 语句覆盖率 | 95.65%（242/253） |
 | `src/` 分支覆盖率 | 80.00%（44/55） |
 | `src/` 函数覆盖率 | 97.78%（44/45） |
 

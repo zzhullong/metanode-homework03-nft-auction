@@ -8,6 +8,21 @@ MetaNodeAcademy LearningRoadmap `contract/homework03` 的实现：ERC721 NFT + �
 
 设计文档：`docs/superpowers/specs/2026-11-16-nft-auction-design.md`
 
+## 与作业要求的对应关系
+
+| 作业要求 | 实现位置 | 对应测试 |
+| --- | --- | --- |
+| ERC721 NFT（铸造、转移、tokenURI） | [src/MetaNFT.sol](src/MetaNFT.sol) | [test/MetaNFT.t.sol](test/MetaNFT.t.sol)（5 个用例） |
+| 拍卖上架，NFT 托管进合约 | `createAuction`（[src/NFTAuction.sol:165](src/NFTAuction.sol#L165)） | `test_CreateAuction_*`（6 个） |
+| ETH / ERC20 双币种出价，统一折算 USD 比价 | `bid`、`bidWithERC20`（[src/NFTAuction.sol:210](src/NFTAuction.sol#L210)） | `test_Bid_*`（11 个，含 `test_Bid_CrossCurrencyUsdComparison`） |
+| Chainlink 预言机折算 + 陈旧校验 | `getUsdValue`、`setPriceFeed`（[src/NFTAuction.sol:388](src/NFTAuction.sol#L388)） | `test_GetUsdValue_*`（5 个） |
+| 拉取式退款 / 货款 / 平台费 | `withdrawRefund` / `withdrawProceeds` / `withdrawFees`（[src/NFTAuction.sol:283](src/NFTAuction.sol#L283)） | `test_Withdraw*`（5 个） |
+| 结算并交付 NFT | `settle`（[src/NFTAuction.sol:347](src/NFTAuction.sol#L347)） | `test_Settle_*`（4 个） |
+| UUPS 可升级代理 | [src/NFTAuction.sol:21](src/NFTAuction.sol#L21) + [script/Upgrade.s.sol](script/Upgrade.s.sol) | `test_Upgrade_*`（2 个）+ 集成测试中的升级用例 |
+| 动态手续费（按成交额分档） | [src/NFTAuctionV2.sol:100](src/NFTAuctionV2.sol#L100) `getFeeBps` | [test/NFTAuctionV2.t.sol](test/NFTAuctionV2.t.sol)（13 个用例） |
+| 部署脚本与测试网部署 | [script/Deploy.s.sol](script/Deploy.s.sol) | 见下方「Sepolia 部署」，地址待部署后填写 |
+| 测试报告与覆盖率 | — | [docs/test-report.md](docs/test-report.md)（`src/` 行覆盖 99.56%） |
+
 ## 当前状态：已实现并通过本地测试
 
 - 全部合约功能已实现：上架托管、ETH/ERC20 双币种出价、Chainlink USD 折算与陈旧校验、拉取式退款/货款/平台费、UUPS 升级、V2 分档动态手续费。
