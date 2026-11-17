@@ -13,8 +13,8 @@ forge coverage --report summary --report lcov
 
 | 项目 | 结果 |
 | --- | --- |
-| 测试用例 | 66 个（65 通过，0 失败，1 跳过） |
-| 跳过说明 | `NFTAuctionFork.t.sol` 需要 `SEPOLIA_RPC_URL`，未配置时自动 `vm.skip` |
+| 测试用例 | 66 个（全部通过，含 Sepolia fork 用例） |
+| fork 说明 | `NFTAuctionFork.t.sol` 需要 `SEPOLIA_RPC_URL`；未配置时自动 `vm.skip`，配置后读取 Sepolia 官方 ETH/USD feed |
 | `src/` 行覆盖率 | **99.56%**（227/228） |
 | `src/` 语句覆盖率 | 95.65%（242/253） |
 | `src/` 分支覆盖率 | 80.00%（44/55） |
@@ -73,7 +73,20 @@ Sepolia 真实 ETH/USD feed 读取与 USD 换算；设置 `SEPOLIA_RPC_URL` 后�
 Ran 6 test suites: 65 tests passed, 0 failed, 1 skipped (66 total tests)
 ```
 
-## 待补
+## Sepolia 部署与 fork 测试（2026-11-17）
 
-- Sepolia 部署后补充真实合约地址、验证结果与部署交易哈希。
-- 如配置了 `SEPOLIA_RPC_URL`，补跑 fork 测试结果。
+合约已部署到 Sepolia 并升级至 V2，完整地址见 `deployments/sepolia.json` 与 README。
+
+| 项目 | 结果 |
+| --- | --- |
+| 网络 | Sepolia（chainId 11155111） |
+| 拍卖代理（交互地址） | `0xB8322C97fDd3B005557DBe8384951E6456136E7b` |
+| V1 实现 | `0xd2B3f7Db8eCC8985CA1fec0f29b5653e277334AC` |
+| V2 实现（当前生效） | `0xe167d464Ca57941d41CAe259A87bDC967d935819` |
+| MetaNFT | `0x1D2eb05E2AE0d15B2409FeE79b24d180c6EF0713` |
+| MockUSDC | `0x5a691F296c80c1544a0519D9EA67F0bD8E069E68` |
+| fork 测试 | `test_Fork_LiveEthUsdFeed` **PASS**（读取官方 ETH/USD feed `0x694AA176…5306` 折算 USD） |
+| 升级后校验 | `getVersion() = "NFTAuction V2"`；费率 200/150/100 bps；分界点 $1,000 / $10,000 |
+| 源码验证 | 未做（未配置 Etherscan API Key） |
+
+> 部署时 Sepolia base fee 约 16 wei：9 笔部署交易 + 1 笔升级交易总计花费不足 0.001 ETH。

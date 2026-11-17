@@ -32,9 +32,10 @@ contract UpgradeScript is Script {
             );
         vm.stopBroadcast();
 
-        string memory key = "upgrade";
-        string memory updated = vm.serializeAddress(key, "v2Implementation", address(implementation));
-        vm.writeJson(updated, deploymentsFile, ".v2Implementation");
+        // 直接写入地址字符串；用 serializeAddress 会在 ".v2Implementation" 下再嵌一层同名对象。
+        vm.writeJson(
+            string.concat('"', vm.toString(address(implementation)), '"'), deploymentsFile, ".v2Implementation"
+        );
 
         console2.log("NFTAuctionV2 impl  ", address(implementation));
         console2.log("Proxy upgraded from", NFTAuction(payable(proxy)).getVersion());

@@ -20,15 +20,15 @@ MetaNodeAcademy LearningRoadmap `contract/homework03` 的实现：ERC721 NFT + �
 | 结算并交付 NFT | `settle`（[src/NFTAuction.sol:347](src/NFTAuction.sol#L347)） | `test_Settle_*`（4 个） |
 | UUPS 可升级代理 | [src/NFTAuction.sol:21](src/NFTAuction.sol#L21) + [script/Upgrade.s.sol](script/Upgrade.s.sol) | `test_Upgrade_*`（2 个）+ 集成测试中的升级用例 |
 | 动态手续费（按成交额分档） | [src/NFTAuctionV2.sol:100](src/NFTAuctionV2.sol#L100) `getFeeBps` | [test/NFTAuctionV2.t.sol](test/NFTAuctionV2.t.sol)（13 个用例） |
-| 部署脚本与测试网部署 | [script/Deploy.s.sol](script/Deploy.s.sol) | 见下方「Sepolia 部署」，地址待部署后填写 |
+| 部署脚本与测试网部署 | [script/Deploy.s.sol](script/Deploy.s.sol)、[script/Upgrade.s.sol](script/Upgrade.s.sol) | 已部署并升级至 V2，地址见下方「Sepolia 部署」 |
 | 测试报告与覆盖率 | — | [docs/test-report.md](docs/test-report.md)（`src/` 行覆盖 99.56%） |
 
 ## 当前状态：已实现并通过本地测试
 
 - 全部合约功能已实现：上架托管、ETH/ERC20 双币种出价、Chainlink USD 折算与陈旧校验、拉取式退款/货款/平台费、UUPS 升级、V2 分档动态手续费。
-- 测试：`forge test` 共 66 个用例，65 通过、1 跳过（Sepolia fork 用例在未配置 RPC 时自动跳过）。
+- 测试：`forge test` 共 66 个用例，**全部通过**（配置 `SEPOLIA_RPC_URL` 后 fork 用例不再跳过，已对 Sepolia 真实 ETH/USD feed 跑通）。
 - 覆盖率：`src/` 行覆盖 99.6%（`NFTAuction` 99.3%、`NFTAuctionV2` 100%、`MetaNFT` 与 mocks 100%）；详见 `docs/test-report.md`。
-- Sepolia 部署与验证待补（需要 RPC、私钥、Etherscan Key）。
+- **已部署到 Sepolia 并升级至 V2**，地址见下方「Sepolia 部署」；源码尚未在 Etherscan 验证（未配置 API Key）。
 
 实现要点（详见源码注释）：
 - 上架是无需许可的：NFT 持有者授权后自行调用 `createAuction`，NFT 托管进拍卖合约。
@@ -73,7 +73,7 @@ git clone --recursive git@github.com:zzhullong/metanode-homework03-nft-auction.g
 git submodule update --init --recursive
 
 forge build                  # 编译全部合约
-forge test                   # 65 通过 / 1 跳过（fork 用例需 SEPOLIA_RPC_URL）
+forge test                   # 66 通过（fork 用例需 SEPOLIA_RPC_URL，未配置时自动跳过）
 forge coverage --report summary
 forge fmt
 ```
@@ -108,7 +108,21 @@ forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify
 forge script script/Upgrade.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify
 ```
 
-4. 地址记录在 `deployments/sepolia.json`，并同步到 README（待部署后填写）。
+4. 地址记录在 `deployments/sepolia.json`，并同步到下方表格。
+
+### 已部署地址（Sepolia，chainId 11155111）
+
+| 合约 | 地址 |
+| --- | --- |
+| **NFTAuction 代理（交互用这个）** | `0xB8322C97fDd3B005557DBe8384951E6456136E7b` |
+| V1 实现 | `0xd2B3f7Db8eCC8985CA1fec0f29b5653e277334AC` |
+| V2 实现（当前生效） | `0xe167d464Ca57941d41CAe259A87bDC967d935819` |
+| MetaNFT | `0x1D2eb05E2AE0d15B2409FeE79b24d180c6EF0713` |
+| MockUSDC（6 位小数） | `0x5a691F296c80c1544a0519D9EA67F0bD8E069E68` |
+| ETH/USD feed（官方 Chainlink） | `0x694AA1769357215DE4FAC081bf1f309aDC325306` |
+| USDC/USD feed（自部署 mock） | `0x0Ff19B399EB444c70d483549438b6ff309609AD8` |
+
+部署者 / owner / feeRecipient：`0x669A0F2529889989971d746acEC08339A02006de`（演示用钱包，仅持有测试币）
 
 Sepolia 上 ETH/USD 使用官方 Chainlink feed（`0x694AA1769357215DE4FAC081bf1f309aDC325306`），MockUSDC 使用自部署 `MockV3Aggregator`（`updatedAt = block.timestamp`）。接入真实 ERC20 时 owner 调用 `setPriceFeed` 换成官方 feed 即可。
 
