@@ -11,6 +11,9 @@ out/
 /broadcast/*/31337/
 /broadcast/**/dry-run/
 
+# Local anvil deployment artifact (deployments/sepolia.json 需要入库)
+/deployments/local.json
+
 # Dotenv file
 .env
 .env.*
