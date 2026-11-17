@@ -130,6 +130,7 @@ contract NFTAuction is Initializable, OwnableUpgradeable, ReentrancyGuard, UUPSU
     error StalePrice(uint256 updatedAt);
     error NothingToWithdraw();
     error UnexpectedValue();
+    error PriceFeedNotContract(address feed);
 
     // ---------------------------------------------------------------------
     // 初始化
@@ -182,15 +183,28 @@ contract NFTAuction is Initializable, OwnableUpgradeable, ReentrancyGuard, UUPSU
             revert NotApproved();
         }
 
-        auctionId = nextAuctionId++;
+        // ===== 优化前（保留）=====
+        // auctionId = nextAuctionId++;
+        // auction.startTime = block.timestamp;
+        // auction.endTime = block.timestamp + duration;
+        //
+        // ===== 优化后 =====
+        // [优化缘由 1] nextAuctionId++ 默认走 checked 自增，包含一次 JUMPI 溢出检查；
+        //   计数器是 uint256，溢出需要 2^256 场拍卖才会发生，不可达，unchecked 省约 80 gas。
+        // [优化缘由 2] block.timestamp 读了两次，缓存到局部变量省一次全局变量读取。
+        auctionId = nextAuctionId;
+        unchecked {
+            nextAuctionId = auctionId + 1;
+        }
 
         // 先把状态写完整，再做外部调用（把 NFT 拉进合约），遵循 checks-effects-interactions。
         Auction storage auction = _auctions[auctionId];
         auction.nft = nft;
         auction.seller = msg.sender;
         auction.tokenId = tokenId;
-        auction.startTime = block.timestamp;
-        auction.endTime = block.timestamp + duration;
+        uint256 start = block.timestamp;
+        auction.startTime = start;
+        auction.endTime = start + duration;
         auction.startingPriceUsd = startingPriceUsd;
         auction.paymentToken = paymentToken;
 
@@ -242,16 +256,31 @@ contract NFTAuction is Initializable, OwnableUpgradeable, ReentrancyGuard, UUPSU
         private
     {
         // 首次出价允许正好等于起拍价，之后必须严格更高（防止原地踏步）。
-        if (auction.highestBidder == address(0)) {
+        //
+        // ===== 优化前（保留）=====
+        // if (auction.highestBidder == address(0)) {
+        //     if (usdValue < auction.startingPriceUsd) {
+        //         revert BidBelowStartingPrice(auction.startingPriceUsd, usdValue);
+        //     }
+        // } else if (usdValue <= auction.highestBidUsd) {
+        //     revert BidNotHighEnough(auction.highestBidUsd, usdValue);
+        // }
+        //
+        // address previousBidder = auction.highestBidder;   // 第二次读同一存储槽
+        // if (previousBidder != address(0)) { ... }
+        //
+        // ===== 优化后：先缓存 highestBidder，一次读取贯穿全函数 =====
+        // [优化缘由] 原版对 auction.highestBidder 读了两次（判空一次、取退款对象一次），
+        // SLOAD 热槽约 100 gas，缓存后省一次读取；同时把退款记账并入 else 分支，
+        // 语义与原版完全一致（previousBidder == 0 时无退款可记）。
+        address previousBidder = auction.highestBidder;
+        if (previousBidder == address(0)) {
             if (usdValue < auction.startingPriceUsd) {
                 revert BidBelowStartingPrice(auction.startingPriceUsd, usdValue);
             }
         } else if (usdValue <= auction.highestBidUsd) {
             revert BidNotHighEnough(auction.highestBidUsd, usdValue);
-        }
-
-        address previousBidder = auction.highestBidder;
-        if (previousBidder != address(0)) {
+        } else {
             // 即使出价人是自己，也照样记账：不在这里做净额抵扣，逻辑最简单，也不会算错账。
             uint256 refundAmount = auction.highestBidAmount;
             address refundToken = auction.highestBidToken;
@@ -281,11 +310,21 @@ contract NFTAuction is Initializable, OwnableUpgradeable, ReentrancyGuard, UUPSU
 
     /// @notice 提取本人在某场拍卖中累计的退款（ETH 与该场拍卖的 ERC20 一并处理）。
     function withdrawRefund(uint256 auctionId) external nonReentrant {
+        // ===== 优化前（保留）=====
+        // 原版在下面三处各自读一次 auction.paymentToken 存储槽：
+        //   uint256 tokenAmount =
+        //       auction.paymentToken == address(0) ? 0 : pendingRefunds[auctionId][msg.sender][auction.paymentToken];
+        //   ...
+        //   pendingRefunds[auctionId][msg.sender][auction.paymentToken] = 0;
+        //   IERC20(auction.paymentToken).safeTransfer(msg.sender, tokenAmount);
+        //
+        // ===== 优化后 =====
+        // [优化缘由] auction.paymentToken 被读取 3 次，缓存到局部变量省 2 次 SLOAD（约 200 gas）。
         Auction storage auction = _auctions[auctionId];
+        address paymentToken = auction.paymentToken;
 
         uint256 ethAmount = pendingRefunds[auctionId][msg.sender][address(0)];
-        uint256 tokenAmount =
-            auction.paymentToken == address(0) ? 0 : pendingRefunds[auctionId][msg.sender][auction.paymentToken];
+        uint256 tokenAmount = paymentToken == address(0) ? 0 : pendingRefunds[auctionId][msg.sender][paymentToken];
 
         if (ethAmount == 0 && tokenAmount == 0) revert NothingToWithdraw();
 
@@ -297,9 +336,9 @@ contract NFTAuction is Initializable, OwnableUpgradeable, ReentrancyGuard, UUPSU
         }
 
         if (tokenAmount > 0) {
-            pendingRefunds[auctionId][msg.sender][auction.paymentToken] = 0;
-            IERC20(auction.paymentToken).safeTransfer(msg.sender, tokenAmount);
-            emit RefundWithdrawn(auctionId, msg.sender, auction.paymentToken, tokenAmount);
+            pendingRefunds[auctionId][msg.sender][paymentToken] = 0;
+            IERC20(paymentToken).safeTransfer(msg.sender, tokenAmount);
+            emit RefundWithdrawn(auctionId, msg.sender, paymentToken, tokenAmount);
         }
     }
 
@@ -354,28 +393,56 @@ contract NFTAuction is Initializable, OwnableUpgradeable, ReentrancyGuard, UUPSU
         // 先置位再外部调用，重入时会被 AlreadySettled 拦住。
         auction.settled = true;
 
+        // ===== 优化前（保留）=====
+        // 原版直接反复读 auction.xxx 存储槽：
+        //   if (auction.highestBidder == address(0)) {
+        //       IERC721(auction.nft).transferFrom(address(this), auction.seller, auction.tokenId);
+        //       emit AuctionSettled(auctionId, address(0), address(0), 0, 0);
+        //       return;
+        //   }
+        //   uint256 fee = _calculateFee(auction.highestBidUsd, auction.highestBidAmount);
+        //   uint256 sellerAmount = auction.highestBidAmount - fee;
+        //   pendingProceeds[auction.seller][auction.highestBidToken] += sellerAmount;
+        //   if (fee > 0) {
+        //       pendingFees[feeRecipient][auction.highestBidToken] += fee;
+        //   }
+        //   IERC721(auction.nft).transferFrom(address(this), auction.highestBidder, auction.tokenId);
+        //   emit AuctionSettled(auctionId, auction.highestBidder, auction.highestBidToken, auction.highestBidAmount, fee);
+        //
+        // ===== 优化后：把反复读取的存储字段缓存到局部变量 =====
+        // [优化缘由] 原版对 nft/seller/tokenId/highestBidder/highestBidToken/highestBidAmount
+        // 各重复读取 2~3 次存储（SLOAD，热槽约 100 gas/次），本函数合计多做约 8 次；
+        // 缓存到栈上一次性读出，结算一单省约 800~1000 gas，行为与存储布局完全不变。
+        address seller = auction.seller;
+        address nft = auction.nft;
+        uint256 tokenId = auction.tokenId;
+        address winner = auction.highestBidder;
+
         // 无人出价：NFT 原路退回卖家，不产生货款。
-        if (auction.highestBidder == address(0)) {
-            IERC721(auction.nft).transferFrom(address(this), auction.seller, auction.tokenId);
+        if (winner == address(0)) {
+            IERC721(nft).transferFrom(address(this), seller, tokenId);
             emit AuctionSettled(auctionId, address(0), address(0), 0, 0);
             return;
         }
 
         // 有出价：按成交 USD 价值算费（V1 恒为 0），剩余部分记给卖家。
         // 费用在结算币种里计算，结算过程不再读预言机，避免预言机异常卡住已结束的拍卖。
-        uint256 fee = _calculateFee(auction.highestBidUsd, auction.highestBidAmount);
-        uint256 sellerAmount = auction.highestBidAmount - fee;
+        address bidToken = auction.highestBidToken;
+        uint256 bidAmount = auction.highestBidAmount;
 
-        pendingProceeds[auction.seller][auction.highestBidToken] += sellerAmount;
+        uint256 fee = _calculateFee(auction.highestBidUsd, bidAmount);
+        uint256 sellerAmount = bidAmount - fee;
+
+        pendingProceeds[seller][bidToken] += sellerAmount;
         if (fee > 0) {
-            pendingFees[feeRecipient][auction.highestBidToken] += fee;
+            pendingFees[feeRecipient][bidToken] += fee;
         }
 
         // 用 transferFrom 而不是 safeTransferFrom：若最高出价者是合约且未实现 onERC721Received，
         // safeTransferFrom 会让结算永久 revert、NFT 永远卡在拍卖合约里。
-        IERC721(auction.nft).transferFrom(address(this), auction.highestBidder, auction.tokenId);
+        IERC721(nft).transferFrom(address(this), winner, tokenId);
 
-        emit AuctionSettled(auctionId, auction.highestBidder, auction.highestBidToken, auction.highestBidAmount, fee);
+        emit AuctionSettled(auctionId, winner, bidToken, bidAmount, fee);
     }
 
     // ---------------------------------------------------------------------
@@ -400,10 +467,19 @@ contract NFTAuction is Initializable, OwnableUpgradeable, ReentrancyGuard, UUPSU
         if (answeredInRound < roundId) revert StalePrice(updatedAt);
 
         uint8 priceDecimals = feed.decimals();
-        uint8 amountDecimals = token == address(0) ? 18 : IERC20Metadata(token).decimals();
+
+        // ===== 优化前（保留）=====
+        // uint8 amountDecimals = token == address(0) ? 18 : IERC20Metadata(token).decimals();
+        // uint256 usd = Math.mulDiv(amount, uint256(answer), 10 ** amountDecimals);
+        //
+        // ===== 优化后 =====
+        // [优化缘由] ETH 路径（token == 0）原本也要做 10**18 幂运算（编译为循环乘法）；
+        //   写死常量 1e18 直接省掉。ERC20 路径仍需读 decimals()（跨合约调用，无法避免，
+        //   除非新增缓存 mapping——那会追加存储变量，破坏与已部署代理的布局兼容，故不做）。
+        uint256 denominator = token == address(0) ? 1e18 : 10 ** IERC20Metadata(token).decimals();
 
         // amount * price / 10^amountDecimals 得到 10^priceDecimals 精度的 USD，再对齐到 8 位小数。
-        uint256 usd = Math.mulDiv(amount, uint256(answer), 10 ** amountDecimals);
+        uint256 usd = Math.mulDiv(amount, uint256(answer), denominator);
         if (priceDecimals > 8) {
             usd /= 10 ** (priceDecimals - 8);
         } else if (priceDecimals < 8) {
@@ -450,8 +526,18 @@ contract NFTAuction is Initializable, OwnableUpgradeable, ReentrancyGuard, UUPSU
     // ---------------------------------------------------------------------
 
     /// @notice 设置某个币种的价格源。token 传 address(0) 即配置 ETH/USD。
+    /// @dev [安全加固] 原版只检查零地址，传 EOA 当 feed 要等到首次出价才报 InvalidPrice；
+    ///      现在配置时即校验目标必须是合约（extcodesize > 0），把配置错误提前暴露。
+    ///      原写法（保留）：
+    ///      function setPriceFeed(address token, address feed) external onlyOwner {
+    ///          if (feed == address(0)) revert ZeroAddress();
+    ///          priceFeeds[token] = feed;
+    ///          emit PriceFeedUpdated(token, feed);
+    ///      }
     function setPriceFeed(address token, address feed) external onlyOwner {
         if (feed == address(0)) revert ZeroAddress();
+        // [优化说明] OZ v5.7 已移除 Address.isContract，用 solidity 原生 address.code 读取 extcodesize
+        if (feed.code.length == 0) revert PriceFeedNotContract(feed);
         priceFeeds[token] = feed;
         emit PriceFeedUpdated(token, feed);
     }

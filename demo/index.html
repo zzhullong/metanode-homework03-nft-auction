@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>NFT 拍卖市场 · 本地演示</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --border: #e2e5ea;
+      --text: #1f2430;
+      --muted: #6b7280;
+      --accent: #2f6fed;
+      --ok: #12805c;
+      --warn: #b45309;
+      --err: #b42318;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+    }
+    h1 { font-size: 17px; margin: 0; font-weight: 600; }
+    h2 { font-size: 14px; margin: 0 0 10px; color: var(--muted); font-weight: 600; }
+    .badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 8px;
+      border-radius: 10px;
+      background: #eef3ff;
+      color: var(--accent);
+      font-size: 12px;
+      vertical-align: middle;
+    }
+    .meta { display: flex; gap: 14px; align-items: center; color: var(--muted); }
+    select, input {
+      font: inherit;
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+    }
+    input { width: 130px; }
+    button {
+      font: inherit;
+      padding: 5px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+    }
+    button.secondary { background: #fff; color: var(--accent); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 20px 60px;
+      display: grid;
+      gap: 16px;
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+    .form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+    .status { margin-top: 8px; font-size: 12px; color: var(--muted); min-height: 16px; }
+    .status.err { color: var(--err); }
+    .status.ok { color: var(--ok); }
+    #error {
+      margin: 12px 20px 0;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #fef3f2;
+      border: 1px solid #fecdca;
+      color: var(--err);
+    }
+    #readonly-note {
+      margin: 12px 20px 0;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #eef3ff;
+      border: 1px solid #c7d7fe;
+      color: var(--accent);
+    }
+    .hidden { display: none; }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .card-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; }
+    .card-title { font-weight: 600; }
+    .tag {
+      font-size: 12px;
+      padding: 1px 8px;
+      border-radius: 10px;
+      background: #f1f3f6;
+      color: var(--muted);
+    }
+    .tag.live { background: #ecfdf3; color: var(--ok); }
+    .tag.done { background: #eef2ff; color: #4f46e5; }
+    .tag.ended { background: #fffaeb; color: var(--warn); }
+    .rows { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 18px; font-size: 13px; }
+    .rows div span { color: var(--muted); margin-right: 4px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+    .card-error { margin-top: 8px; font-size: 12px; color: var(--err); }
+    .empty { color: var(--muted); font-size: 13px; padding: 6px 0; }
+    .wrow { display: flex; gap: 12px; align-items: center; padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: 13px; }
+    .wrow:last-child { border-bottom: none; }
+    .wrow .amount { min-width: 120px; font-variant-numeric: tabular-nums; }
+    .wrow .label { min-width: 150px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>NFT 拍卖市场<span id="version" class="badge">连接中…</span></h1>
+    <div class="meta">
+      <label>网络
+        <select id="network">
+          <option value="local">本地 anvil</option>
+          <option value="sepolia">Sepolia 测试网（只读）</option>
+        </select>
+      </label>
+      <span>链 ID <b id="chainId">—</b></span>
+      <label id="account-wrap">当前账户
+        <select id="account"></select>
+      </label>
+      <label id="watch-wrap" class="hidden">查看地址
+        <input id="watch" style="width:330px" />
+      </label>
+      <button id="refresh" class="secondary">刷新数据</button>
+    </div>
+  </header>
+
+  <div id="readonly-note" class="hidden">
+    Sepolia 只读模式：展示真实部署的合约状态，不发送任何交易。切回「本地 anvil」可进行完整交互演示。
+  </div>
+
+  <div id="error" class="hidden"></div>
+
+  <main>
+    <section id="manual-section" class="hidden">
+      <h2>手动填写合约地址</h2>
+      <div class="status">未能读取 deployments/local.json，请先运行部署脚本，或在这里手动填写。</div>
+      <div class="form" id="manual-form"></div>
+    </section>
+
+    <section id="create">
+      <h2>创建拍卖</h2>
+      <div class="form">
+        <label>NFT 地址<input id="c-nft" /></label>
+        <label>tokenId<input id="c-tokenId" value="1" /></label>
+        <label>起拍价 (USD)<input id="c-price" value="1000" /></label>
+        <label>时长 (秒)<input id="c-duration" value="3600" /></label>
+        <label>计价代币
+          <select id="c-payment">
+            <option value="eth">仅 ETH</option>
+            <option value="usdc" selected>ETH + USDC</option>
+          </select>
+        </label>
+        <button id="c-submit">创建拍卖</button>
+      </div>
+      <div id="create-status" class="status"></div>
+    </section>
+
+    <section id="tools">
+      <h2>工具</h2>
+      <div class="actions" style="margin-top:0">
+        <button id="t-advance" class="secondary">推进时间 +1 小时</button>
+        <button id="t-oracle" class="secondary">刷新预言机</button>
+        <button id="t-usdc" class="secondary">领取 5000 测试 USDC</button>
+        <span id="tools-status" class="status" style="margin:0"></span>
+      </div>
+    </section>
+
+    <section id="auctions">
+      <h2>拍卖列表</h2>
+      <div id="auction-list"><div class="empty">加载中…</div></div>
+    </section>
+
+    <section id="withdraw">
+      <h2>可提取（当前账户）</h2>
+      <div id="withdraw-body"><div class="empty">加载中…</div></div>
+    </section>
+  </main>
+
+  <script src="./ethers.umd.min.js"></script>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

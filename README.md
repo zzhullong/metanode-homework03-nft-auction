@@ -92,6 +92,17 @@ PRIVATE_KEY=<anvil 私钥> forge script script/Deploy.s.sol \
 
 产物写入 `deployments/local.json`。
 
+### 本地演示页
+
+`demo/` 提供一个纯浏览器操作页面：本地链模式下可创建拍卖、出价、结算、提取，Sepolia 模式只读查看真实部署状态。无需 MetaMask、无需外网（ethers 本地 vendor）。
+
+```bash
+python3 -m http.server 5173 --bind 127.0.0.1   # 仓库根目录执行
+# 浏览器打开 http://127.0.0.1:5173/demo/
+```
+
+启动步骤与演示剧本见 [demo/README.md](demo/README.md)；纯逻辑单测：`node --test demo/lib.test.mjs`。
+
 ## Sepolia 部署
 
 1. 复制 `.env.example` 为 `.env` 并填写 `SEPOLIA_RPC_URL`、`PRIVATE_KEY`、`ETHERSCAN_API_KEY`、可选 `FEE_RECIPIENT`。
@@ -114,13 +125,13 @@ forge script script/Upgrade.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verif
 
 | 合约 | 地址 | Etherscan |
 | --- | --- | --- |
-| **NFTAuction 代理（交互用这个）** | `0xB8322C97fDd3B005557DBe8384951E6456136E7b` | [查看](https://sepolia.etherscan.io/address/0xB8322C97fDd3B005557DBe8384951E6456136E7b#code) |
-| V1 实现 | `0xd2B3f7Db8eCC8985CA1fec0f29b5653e277334AC` | [查看](https://sepolia.etherscan.io/address/0xd2B3f7Db8eCC8985CA1fec0f29b5653e277334AC#code) |
-| V2 实现（当前生效） | `0xe167d464Ca57941d41CAe259A87bDC967d935819` | [查看](https://sepolia.etherscan.io/address/0xe167d464Ca57941d41CAe259A87bDC967d935819#code) |
-| MetaNFT | `0x1D2eb05E2AE0d15B2409FeE79b24d180c6EF0713` | [查看](https://sepolia.etherscan.io/address/0x1D2eb05E2AE0d15B2409FeE79b24d180c6EF0713#code) |
-| MockUSDC（6 位小数） | `0x5a691F296c80c1544a0519D9EA67F0bD8E069E68` | [查看](https://sepolia.etherscan.io/address/0x5a691F296c80c1544a0519D9EA67F0bD8E069E68#code) |
+| **NFTAuction 代理（交互用这个）** | `0x9D6f4d339A62A351858cd28A5E550A03cb3739C6` | [查看](https://sepolia.etherscan.io/address/0x9D6f4d339A62A351858cd28A5E550A03cb3739C6#code) |
+| V1 实现 | `0x94ED19b9277A34055FEF762F3303F41fE0EbFB95` | [查看](https://sepolia.etherscan.io/address/0x94ED19b9277A34055FEF762F3303F41fE0EbFB95#code) |
+| V2 实现（当前生效） | `0x242904fe2BbC187D710289d7d202314273d10A7D` | [查看](https://sepolia.etherscan.io/address/0x242904fe2BbC187D710289d7d202314273d10A7D#code) |
+| MetaNFT | `0xb944977eb0929fCEC867d10AA17eA0973fC3489a` | [查看](https://sepolia.etherscan.io/address/0xb944977eb0929fCEC867d10AA17eA0973fC3489a#code) |
+| MockUSDC（6 位小数） | `0xc58EF42d22379F0352F9770f373A3fddDc69C810` | [查看](https://sepolia.etherscan.io/address/0xc58EF42d22379F0352F9770f373A3fddDc69C810#code) |
 | ETH/USD feed（官方 Chainlink） | `0x694AA1769357215DE4FAC081bf1f309aDC325306` | [查看](https://sepolia.etherscan.io/address/0x694AA1769357215DE4FAC081bf1f309aDC325306) |
-| USDC/USD feed（自部署 mock） | `0x0Ff19B399EB444c70d483549438b6ff309609AD8` | [查看](https://sepolia.etherscan.io/address/0x0Ff19B399EB444c70d483549438b6ff309609AD8#code) |
+| USDC/USD feed（自部署 mock） | `0x2D1F4D6D5661ead9da7A76F506ef74D9E8AAa256` | [查看](https://sepolia.etherscan.io/address/0x2D1F4D6D5661ead9da7A76F506ef74D9E8AAa256#code) |
 
 以上 6 个自部署合约均已在 Etherscan 完成源码验证。
 

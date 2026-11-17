@@ -80,11 +80,11 @@ Ran 6 test suites: 65 tests passed, 0 failed, 1 skipped (66 total tests)
 | 项目 | 结果 |
 | --- | --- |
 | 网络 | Sepolia（chainId 11155111） |
-| 拍卖代理（交互地址） | `0xB8322C97fDd3B005557DBe8384951E6456136E7b` |
-| V1 实现 | `0xd2B3f7Db8eCC8985CA1fec0f29b5653e277334AC` |
-| V2 实现（当前生效） | `0xe167d464Ca57941d41CAe259A87bDC967d935819` |
-| MetaNFT | `0x1D2eb05E2AE0d15B2409FeE79b24d180c6EF0713` |
-| MockUSDC | `0x5a691F296c80c1544a0519D9EA67F0bD8E069E68` |
+| 拍卖代理（交互地址） | `0x9D6f4d339A62A351858cd28A5E550A03cb3739C6` |
+| V1 实现 | `0x94ED19b9277A34055FEF762F3303F41fE0EbFB95` |
+| V2 实现（当前生效） | `0x242904fe2BbC187D710289d7d202314273d10A7D` |
+| MetaNFT | `0xb944977eb0929fCEC867d10AA17eA0973fC3489a` |
+| MockUSDC | `0xc58EF42d22379F0352F9770f373A3fddDc69C810` |
 | fork 测试 | `test_Fork_LiveEthUsdFeed` **PASS**（读取官方 ETH/USD feed `0x694AA176…5306` 折算 USD） |
 | 升级后校验 | `getVersion() = "NFTAuction V2"`；费率 200/150/100 bps；分界点 $1,000 / $10,000 |
 | 源码验证 | 6 个自部署合约（代理、V1/V2 实现、MetaNFT、MockUSDC、MockV3Aggregator）均已在 Etherscan 验证通过 |

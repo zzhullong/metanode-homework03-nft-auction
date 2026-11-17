@@ -10,8 +10,9 @@ out/
 !/broadcast
 /broadcast/*/31337/
 /broadcast/**/dry-run/
-# 只保留每个网络脚本的 run-latest.json，忽略带时间戳的副本与恢复锁文件
+# 只保留每个网络脚本的 run-latest.json，忽略时间戳副本与恢复锁文件
 /broadcast/**/run-[0-9]*.json
+/broadcast/**/run-latest.[0-9]*.json
 /broadcast/**/*.recovery.lock
 
 # Local anvil deployment artifact (deployments/sepolia.json 需要入库)
